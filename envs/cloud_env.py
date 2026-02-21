@@ -25,14 +25,18 @@ class CloudEnv(gym.Env):
         self.current_step = 0
 
     # -----------------------------------
-    def reset(self, seed=None, options=None):
-
-        metrics = self.sim.reset()
-        self.current_step = 0
-
-        state = self._build_state(metrics)
-
-        return state, {}
+    def reset(self):
+        self.lambda_t = self.lambda_base
+        self.N_t = 5
+        self.t = 0
+        
+        # Run a 'stay' action (action=1) to populate all metrics initially
+        initial_metrics = self.step(1)
+        
+        # Reset the time counter since that step was just for initialization
+        self.t = 0 
+        
+        return initial_metrics
 
     # -----------------------------------
     def step(self, action):
