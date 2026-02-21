@@ -67,10 +67,3 @@ class CloudSimulator:
             "error_rate": error_rate,
             "cost": cost
         }
-
-    # -----------------------------------
-    def _get_metrics(self):
-        return {
-            "lambda": self.lambda_t,
-            "instances": self.N_t
-        }
