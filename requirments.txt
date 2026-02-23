@@ -4,3 +4,4 @@ stable-baselines3>=2.2.0
 matplotlib>=3.7
 seaborn>=0.12
 pytest>=7.4
+cloudsim=>latest
