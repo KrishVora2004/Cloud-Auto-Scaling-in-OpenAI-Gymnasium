@@ -1,8 +1,8 @@
 # agents/train.py
 
 import argparse
-from ppo_agent import train_ppo
-from dqn_agent import train_dqn
+from agents.ppo_agent import train_ppo
+from agents.dqn_agent import train_dqn
 
 
 def main():

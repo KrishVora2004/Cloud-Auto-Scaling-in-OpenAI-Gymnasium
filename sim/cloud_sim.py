@@ -5,6 +5,8 @@ import numpy as np
 
 class CloudSimulator:
 
+    # sim/cloud_sim.py
+
     def __init__(self,
                  mu=50,
                  cost_per_instance=1,
@@ -20,14 +22,21 @@ class CloudSimulator:
         self.N_min = N_min
         self.N_max = N_max
 
+        # Initialize base variables so step() doesn't fail
+        self.lambda_t = self.lambda_base
+        self.N_t = 5
+        self.t = 0
+        
+        # Now it is safe to call reset
         self.reset()
 
-    # -----------------------------------
     def reset(self):
         self.lambda_t = self.lambda_base
         self.N_t = 5
         self.t = 0
-        return self._get_metrics()
+        
+        # Return the initial metrics by running a "dummy" step
+        return self.step(1)
 
     # -----------------------------------
     def step(self, action):
