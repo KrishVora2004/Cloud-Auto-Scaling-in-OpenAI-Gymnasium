@@ -2,18 +2,18 @@
 
 ## Overview
 
-This project implements a cloud auto-scaling system using Reinforcement Learning (RL).
+This project implements a cloud auto-scaling system using Reinforcement Learning (RL).  
 The objective is to dynamically scale cloud compute instances based on workload demand while balancing:
 
-* Response time (latency)
-* Error rate (SLA violations)
-* Infrastructure cost
-* Scaling stability
+- Response time (latency)  
+- Error rate (SLA violations)  
+- Infrastructure cost  
+- Scaling stability  
 
 Two RL algorithms are implemented and compared:
 
-* Deep Q-Network (DQN)
-* Proximal Policy Optimization (PPO)
+- Deep Q-Network (DQN)  
+- Proximal Policy Optimization (PPO)  
 
 The system is built using Gymnasium and Stable-Baselines3.
 
@@ -31,40 +31,40 @@ project/
 ├── agents/       → PPO and DQN training implementations
 ├── tests/        → Unit tests for validation
 ├──models/        → Saved trained models
-└── evaluation/   → has baseleine and evalution,plotting modules
+└── evaluation/   → evaluation pipeline (baseline,metrics,plotting)
 ```
 
 ---
 
 ## 1. Simulation Layer (`sim/`)
 
-This layer contains the cloud system model.
+This layer contains the cloud system model.  
 It is completely independent of reinforcement learning.
 
 ### Responsibilities
 
-* Workload generation (stochastic demand)
-* Instance scaling logic
-* Queue-based performance modeling
-* Cost computation
-* System metrics calculation
+- Workload generation (stochastic demand)  
+- Instance scaling logic  
+- Queue-based performance modeling  
+- Cost computation  
+- System metrics calculation  
 
 ### System Modeling Assumptions
 
 The simulation models a simplified cloud service using:
 
-* Request arrival rate (λ)
-* Service rate per instance (μ)
-* Instance count (N)
-* M/M/1-style queue approximation for response time
-* Error rate under overload conditions
+- Request arrival rate (λ)  
+- Service rate per instance (μ)  
+- Instance count (N)  
+- M/M/1-style queue approximation for response time  
+- Error rate under overload conditions  
 
 ### Why This Separation Matters
 
-* Reusability of the simulator
-* Clean testing
-* Clear abstraction boundaries
-* Independent experimentation
+- Reusability of the simulator  
+- Clean testing  
+- Clear abstraction boundaries  
+- Independent experimentation  
 
 ---
 
@@ -125,7 +125,7 @@ Both algorithms use multilayer perceptron (MLP) policies.
 
 ---
 
-# Resources Modeled in the System
+## 4. Resources Modeled in the System
 
 The system models the following cloud resources and metrics:
 
@@ -155,6 +155,32 @@ The system models the following cloud resources and metrics:
 
 * Linear cost per instance
 * Total cost proportional to number of instances
+
+---
+
+## 5. Evaluation Pipeline (`evaluation/`)
+
+This module enables **performance validation and optimization proof** by comparing RL agents against a baseline.
+
+### Components
+
+#### `baseline.py`
+- Implements a threshold-based auto-scaling policy  
+- Serves as a benchmark for comparison  
+
+#### `evaluate.py`
+- Loads trained PPO and DQN models  
+- Runs evaluation episodes  
+- Computes performance metrics:
+  - Average cost  
+  - Error rate  
+  - Response time  
+- Compares results with baseline  
+
+#### `plot_results.py`
+- Generates visualizations such as:
+  - Workload vs Instances  
+  - Scaling behavior over time  
 
 ---
 
@@ -208,6 +234,17 @@ Because both PPO and DQN are implemented:
 
 ---
 
+## 5. Measurable Optimization Framework
+
+With the evaluation pipeline, the project enables:
+
+- Comparison against baseline auto-scaling  
+- Quantitative performance analysis  
+- Visualization of scaling behavior  
+- Evidence-based optimization validation  
+
+---
+
 # Advantages of RL-Based Auto Scaling
 
 Traditional threshold-based auto-scalers:
@@ -249,6 +286,7 @@ It provides:
 * A scalable Gymnasium environment
 * PPO and DQN implementations
 * A structured experimental framework
+* Quantitative comparison with baseline methods
 
 The system serves as a strong foundation for advanced cloud optimization research and experimentation.
 
