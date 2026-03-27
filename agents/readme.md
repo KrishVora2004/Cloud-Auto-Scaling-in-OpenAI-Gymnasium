@@ -3,6 +3,12 @@
 
 ## How to Run (VS Code Terminal)
 
+### Format
+
+```bash
+python agents/train.py --algo {algorithm_name} --steps {number of steps}
+```
+
 ### Train PPO
 
 ```bash
