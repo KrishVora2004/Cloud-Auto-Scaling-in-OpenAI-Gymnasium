@@ -7,6 +7,39 @@ class CloudSimulator:
 
     # sim/cloud_sim.py
 
+
+    def _generate_workload(self):
+        """
+        Realistic workload model:
+        - periodic pattern
+        - noise
+        - occasional bursts
+        """
+
+        # Time step
+        t = self.t
+
+        # ---- Base Load ----
+        base = self.lambda_base
+
+        # ---- Periodic Pattern (sin wave) ----
+        periodic = 50 * np.sin(0.05 * t)
+
+        # ---- Noise ----
+        noise = np.random.normal(0, self.noise_std)
+
+        # ---- Burst Events ----
+        burst = 0
+        if np.random.rand() < 0.05:  # 5% chance
+            burst = np.random.uniform(100, 300)
+
+        # Final workload
+        lambda_t = base + periodic + noise + burst
+
+        return max(0, lambda_t)
+    
+    
+    #------------------------------------
     def __init__(self,
                  mu=50,
                  cost_per_instance=1,
@@ -37,6 +70,7 @@ class CloudSimulator:
         
         # Return the initial metrics by running a "dummy" step
         return self.step(1)
+    
 
     # -----------------------------------
     def step(self, action):
@@ -50,8 +84,7 @@ class CloudSimulator:
         self.N_t = np.clip(self.N_t, self.N_min, self.N_max)
 
         # Workload update
-        noise = np.random.normal(0, self.noise_std)
-        self.lambda_t = max(0, self.lambda_t + noise)
+        self.lambda_t = self._generate_workload()
 
         capacity = self.N_t * self.mu
         utilization = self.lambda_t / capacity if capacity > 0 else 1.0
