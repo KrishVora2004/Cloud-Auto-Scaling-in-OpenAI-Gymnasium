@@ -20,18 +20,20 @@ class CloudSimulator:
         t = self.t
 
         # ---- Base Load ----
-        base = self.lambda_base
+        base = 100
 
         # ---- Periodic Pattern (sin wave) ----
-        periodic = 50 * np.sin(0.05 * t)
+        periodic = 60 * np.sin(0.05 * t)
 
         # ---- Noise ----
-        noise = np.random.normal(0, self.noise_std)
+        noise = np.random.normal(0, 10)
 
         # ---- Burst Events ----
         burst = 0
         if np.random.rand() < 0.05:  # 5% chance
-            burst = np.random.uniform(100, 300)
+            burst = np.random.uniform(100, 200)
+        else:
+            burst = 0
 
         # Final workload
         lambda_t = base + periodic + noise + burst
