@@ -5,6 +5,7 @@ from envs.cloud_env import CloudEnv
 from stable_baselines3 import PPO, DQN
 from .baseline import threshold_policy
 import matplotlib.pyplot as plt
+from sim.workload import WorkloadGenerator
 from .plot_results import plot_instances_vs_workload
 
 
@@ -64,20 +65,25 @@ def run_episode(env, policy_fn=None, model=None):
 
 def evaluate_all():
 
-    env = CloudEnv()
+    workload = WorkloadGenerator(500)
+
+    ppo_env = CloudEnv(workload)
+    dqn_env = CloudEnv(workload)
+    baseline_env = CloudEnv(workload)
 
     # Load models
-    ppo_model = PPO.load("models/ppo_cloud")
-    dqn_model = DQN.load("models/dqn_cloud")
+    # Note: Ensure these paths are to be changed according to models names
+    ppo_model = PPO.load("models/ppo_st_1000")
+    dqn_model = DQN.load("models/dqn_st_1000")
 
     print("Running PPO...")
-    ppo_results = run_episode(env, model=ppo_model)
+    ppo_results = run_episode(ppo_env, model=ppo_model)
 
     print("Running DQN...")
-    dqn_results = run_episode(env, model=dqn_model)
+    dqn_results = run_episode(dqn_env, model=dqn_model)
 
     print("Running Baseline...")
-    baseline_results = run_episode(env, policy_fn=threshold_policy)
+    baseline_results = run_episode(baseline_env, policy_fn=threshold_policy)
 
     return ppo_results, dqn_results, baseline_results
 
@@ -90,9 +96,5 @@ if __name__ == "__main__":
     print(f"PPO -> Cost: {ppo['cost']:.2f}, Error: {ppo['error']:.3f}, Response: {ppo['response']:.3f}")
     print(f"DQN -> Cost: {dqn['cost']:.2f}, Error: {dqn['error']:.3f}, Response: {dqn['response']:.3f}")
     print(f"BASELINE -> Cost: {baseline['cost']:.2f}, Error: {baseline['error']:.3f}, Response: {baseline['response']:.3f}")
-    results = {
-        "PPO": ppo,
-        "DQN": dqn,
-        "BASELINE": baseline
-    }
-    plot_instances_vs_workload(results)
+    
+    plot_instances_vs_workload(ppo, dqn, baseline)

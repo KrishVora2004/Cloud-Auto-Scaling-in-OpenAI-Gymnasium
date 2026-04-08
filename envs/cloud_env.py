@@ -8,11 +8,13 @@ from sim.cloud_sim import CloudSimulator
 
 class CloudEnv(gym.Env):
 
-    def __init__(self):
+    def __init__(self, workload):
 
         super(CloudEnv, self).__init__()
 
         self.sim = CloudSimulator()
+        self.workload = workload   # NEW
+        self.t = 0                 # NEW
 
         self.action_space = spaces.Discrete(3)
 
@@ -21,31 +23,40 @@ class CloudEnv(gym.Env):
 
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
 
-        self.max_steps = 500
-        self.current_step = 0
-
-    # -----------------------------------
     def reset(self, seed=None, options=None):
-        super().reset(seed=seed) # Good practice for Gymnasium
-        
-        metrics = self.sim.reset() # This now returns the full dict from self.step(1)
-        self.current_step = 0
+
+        self.sim.reset()
+        self.t = 0
+
+        lambda_t = self.workload.get(self.t)
+
+        metrics = {
+            "lambda": lambda_t,
+            "instances": self.sim.N_t,
+            "utilization": 0,
+            "response_time": 0,
+            "error_rate": 0,
+            "cost": 0
+        }
 
         state = self._build_state(metrics)
+
         return state, {}
 
-    # -----------------------------------
     def step(self, action):
 
-        metrics = self.sim.step(action)
+        lambda_t = self.workload.get(self.t)
+
+        metrics = self.sim.step(action, lambda_t)
 
         state = self._build_state(metrics)
 
         reward = self.compute_reward(metrics, action)
 
-        self.current_step += 1
+        self.t += 1
+
         terminated = False
-        truncated = self.current_step >= self.max_steps
+        truncated = self.t >= len(self.workload.sequence)
 
         return state, reward, terminated, truncated, {}
 
