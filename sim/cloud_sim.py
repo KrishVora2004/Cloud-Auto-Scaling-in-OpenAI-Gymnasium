@@ -60,7 +60,8 @@ class CloudSimulator:
 
         # Queue-based response time
         if self.lambda_t < capacity:
-            response_time = 1 / (self.mu - (self.lambda_t / self.N_t))
+            epsilon = 1e-6
+            response_time = 1 / max(self.mu - (self.lambda_t / self.N_t), epsilon)
             error_rate = 0
         else:
             response_time = 10

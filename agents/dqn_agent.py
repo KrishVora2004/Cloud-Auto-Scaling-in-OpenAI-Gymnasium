@@ -4,13 +4,17 @@ from stable_baselines3 import DQN
 from stable_baselines3.common.monitor import Monitor
 from envs.cloud_env import CloudEnv
 import os
+from sim.workload import WorkloadGenerator
 
 
-def train_dqn(total_timesteps=100_000, model_path="models/dqn_cloud"):
+def train_dqn(total_timesteps=100_000, model_path="models/dqn_cloud",workload=None):
 
     os.makedirs("models", exist_ok=True)
 
-    env = Monitor(CloudEnv())
+    
+    if workload is None:
+        workload = WorkloadGenerator(steps=1000)
+    env = Monitor(CloudEnv(workload))
 
     model = DQN(
         policy="MlpPolicy",

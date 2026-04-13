@@ -58,7 +58,19 @@ class CloudEnv(gym.Env):
         terminated = False
         truncated = self.t >= len(self.workload.sequence)
 
-        return state, reward, terminated, truncated, {}
+        info = {
+            "requests": metrics["lambda"],
+            "served_requests": metrics["lambda"] * (1 - metrics["error_rate"]),
+            "utilization": min(metrics["utilization"], 1.0),
+            "response_time": metrics["response_time"],
+            "error_rate": metrics["error_rate"],
+            "cost": metrics["cost"],
+            "instances": metrics["instances"],
+            "action": action,
+            "reward": reward
+        }
+
+        return state, reward, terminated, truncated, info
 
     # -----------------------------------
     def _build_state(self, metrics):

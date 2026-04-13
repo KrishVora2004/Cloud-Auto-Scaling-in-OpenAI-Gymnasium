@@ -1,9 +1,8 @@
-# agents/train_both.py
-
 import os
 from datetime import datetime
-from stable_baselines3 import PPO, DQN
-from envs.cloud_env import CloudEnv
+
+from agents.dqn_agent import train_dqn
+from agents.ppo_agent import train_ppo
 from sim.workload import WorkloadGenerator
 
 
@@ -11,28 +10,31 @@ def train_both(total_steps=100000):
 
     os.makedirs("models", exist_ok=True)
 
-    # Generate shared workload
-    workload = WorkloadGenerator(total_steps)
+    # SAME base workload 
+    base_workload = WorkloadGenerator(total_steps, seed=42)
 
-    print("Training DQN...")
-    env_dqn = CloudEnv(workload)
-
-    dqn_model = DQN("MlpPolicy", env_dqn, verbose=1)
-    dqn_model.learn(total_timesteps=total_steps)
+    # Create independent copies
+    workload_dqn = WorkloadGenerator(total_steps, sequence=base_workload.sequence)
+    workload_ppo = WorkloadGenerator(total_steps, sequence=base_workload.sequence)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    dqn_path = f"models/dqn_{timestamp}.zip"
-    dqn_model.save(dqn_path)
 
-    print(f"DQN saved at {dqn_path}")
+    print("Training DQN...")
+    dqn_model = train_dqn(
+        total_timesteps=total_steps,
+        model_path=f"models/dqn_{timestamp}",
+        workload=workload_dqn
+    )
+
+    print(f"DQN saved at models/dqn_{timestamp}.zip")
 
     print("\nTraining PPO...")
-    env_ppo = CloudEnv(workload)
+    ppo_model = train_ppo(
+        total_timesteps=total_steps,
+        model_path=f"models/ppo_{timestamp}",
+        workload=workload_ppo
+    )
 
-    ppo_model = PPO("MlpPolicy", env_ppo, verbose=1)
-    ppo_model.learn(total_timesteps=total_steps)
+    print(f"PPO saved at models/ppo_{timestamp}.zip")
 
-    ppo_path = f"models/ppo_{timestamp}.zip"
-    ppo_model.save(ppo_path)
-
-    print(f"PPO saved at {ppo_path}")
+    return dqn_model, ppo_model

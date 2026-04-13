@@ -4,14 +4,18 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.monitor import Monitor
 from envs.cloud_env import CloudEnv
+from sim import workload
+from sim.workload import WorkloadGenerator
 import os
 
 
-def train_ppo(total_timesteps=100_000, model_path="models/ppo_cloud"):
+def train_ppo(total_timesteps=100_000, model_path="models/ppo_cloud",workload=None):
 
     os.makedirs("models", exist_ok=True)
 
-    env = Monitor(CloudEnv())
+    if workload is None:
+        workload = WorkloadGenerator(1000)
+    env = Monitor(CloudEnv(workload))
 
     model = PPO(
         policy="MlpPolicy",

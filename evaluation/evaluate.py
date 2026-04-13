@@ -31,16 +31,14 @@ def run_episode(env, policy_fn=None, model=None):
         else:
             action = policy_fn(state)
 
-        next_state, reward, terminated, truncated, _ = env.step(action)
+        next_state, reward, terminated, truncated, info = env.step(action)
 
-        # Extract metrics
-        instances = next_state[1]
-        utilization = next_state[2]
-        error_rate = next_state[3]
-        response_time = next_state[4]
+        instances = info["instances"]
+        utilization = info["utilization"]
+        error_rate = info["error_rate"]
+        response_time = info["response_time"]
 
-        # Approx cost
-        cost = instances
+        cost = info["cost"]
 
         total_cost += cost
         total_error += error_rate
@@ -65,11 +63,9 @@ def run_episode(env, policy_fn=None, model=None):
 
 def evaluate_all():
 
-    workload = WorkloadGenerator(500)
-
-    ppo_env = CloudEnv(workload)
-    dqn_env = CloudEnv(workload)
-    baseline_env = CloudEnv(workload)
+    ppo_env = CloudEnv(WorkloadGenerator(500, seed=1))
+    dqn_env = CloudEnv(WorkloadGenerator(500, seed=2))
+    baseline_env = CloudEnv(WorkloadGenerator(500, seed=3))
 
     # Load models
     # Note: Ensure these paths are to be changed according to models names
@@ -86,6 +82,12 @@ def evaluate_all():
     baseline_results = run_episode(baseline_env, policy_fn=threshold_policy)
 
     return ppo_results, dqn_results, baseline_results
+
+def evaluate_multiple(runs=5):
+    results = []
+    for i in range(runs):
+        results.append(evaluate_all())
+    return results
 
 
 if __name__ == "__main__":

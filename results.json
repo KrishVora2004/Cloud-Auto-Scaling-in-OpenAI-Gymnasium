@@ -1,0 +1,226 @@
+{
+    "spike": {
+        "DQN": {
+            "cost": {
+                "mean": 506.0,
+                "std": 0.0
+            },
+            "sla_violation": {
+                "mean": 0.7560000000000002,
+                "std": 0.0
+            },
+            "latency": {
+                "mean": 9.940193333333333,
+                "std": 0.0
+            },
+            "utilization": {
+                "mean": 0.9961666666666668,
+                "std": 1.1102230246251565e-16
+            }
+        },
+        "PPO": {
+            "cost": {
+                "mean": 9895.0,
+                "std": 0.0
+            },
+            "sla_violation": {
+                "mean": 0.0,
+                "std": 0.0
+            },
+            "latency": {
+                "mean": 0.03699541835821557,
+                "std": 0.0
+            },
+            "utilization": {
+                "mean": 0.4291288126476207,
+                "std": 0.0
+            }
+        },
+        "Baseline": {
+            "cost": {
+                "mean": 5646.0,
+                "std": 0.0
+            },
+            "sla_violation": {
+                "mean": 0.0056,
+                "std": 0.0
+            },
+            "latency": {
+                "mean": 0.23653999999999997,
+                "std": 0.0
+            },
+            "utilization": {
+                "mean": 0.7034207459207461,
+                "std": 0.0
+            }
+        }
+    },
+    "linear": {
+        "DQN": {
+            "cost": {
+                "mean": 506.0,
+                "std": 0.0
+            },
+            "sla_violation": {
+                "mean": 0.8087587254675869,
+                "std": 0.0
+            },
+            "latency": {
+                "mean": 9.603571647674574,
+                "std": 0.0
+            },
+            "utilization": {
+                "mean": 0.9823,
+                "std": 0.0
+            }
+        },
+        "PPO": {
+            "cost": {
+                "mean": 9895.0,
+                "std": 0.0
+            },
+            "sla_violation": {
+                "mean": 3.976158875457883e-05,
+                "std": 0.0
+            },
+            "latency": {
+                "mean": 0.23566358906314702,
+                "std": 0.0
+            },
+            "utilization": {
+                "mean": 0.5093348474940952,
+                "std": 0.0
+            }
+        },
+        "Baseline": {
+            "cost": {
+                "mean": 6263.0,
+                "std": 0.0
+            },
+            "sla_violation": {
+                "mean": 3.976158875457883e-05,
+                "std": 0.0
+            },
+            "latency": {
+                "mean": 0.2690158315260434,
+                "std": 0.0
+            },
+            "utilization": {
+                "mean": 0.7760467406628458,
+                "std": 0.0
+            }
+        }
+    },
+    "noisy": {
+        "DQN": {
+            "cost": {
+                "mean": 506.0,
+                "std": 0.0
+            },
+            "sla_violation": {
+                "mean": 0.708969453166795,
+                "std": 0.005516018617199515
+            },
+            "latency": {
+                "mean": 9.499023552617336,
+                "std": 0.036533252845447665
+            },
+            "utilization": {
+                "mean": 0.98373,
+                "std": 0.0011538052984220602
+            }
+        },
+        "PPO": {
+            "cost": {
+                "mean": 9895.0,
+                "std": 0.0
+            },
+            "sla_violation": {
+                "mean": 0.00017948717948717952,
+                "std": 0.00020189763779517465
+            },
+            "latency": {
+                "mean": 0.042072180217987976,
+                "std": 0.009084413755521848
+            },
+            "utilization": {
+                "mean": 0.2697335633043713,
+                "std": 0.003340261369147448
+            }
+        },
+        "Baseline": {
+            "cost": {
+                "mean": 4782.0,
+                "std": 33.4165627596057
+            },
+            "sla_violation": {
+                "mean": 0.012321973503196726,
+                "std": 0.0005371685395515293
+            },
+            "latency": {
+                "mean": 0.9792871901857073,
+                "std": 0.09700632920310806
+            },
+            "utilization": {
+                "mean": 0.5546471235801236,
+                "std": 0.0020690403311525085
+            }
+        }
+    },
+    "periodic": {
+        "DQN": {
+            "cost": {
+                "mean": 506.0,
+                "std": 0.0
+            },
+            "sla_violation": {
+                "mean": 0.6192000488300514,
+                "std": 0.0
+            },
+            "latency": {
+                "mean": 10.0,
+                "std": 0.0
+            },
+            "utilization": {
+                "mean": 1.0,
+                "std": 0.0
+            }
+        },
+        "PPO": {
+            "cost": {
+                "mean": 9895.0,
+                "std": 0.0
+            },
+            "sla_violation": {
+                "mean": 0.0,
+                "std": 0.0
+            },
+            "latency": {
+                "mean": 0.025813806632897295,
+                "std": 0.0
+            },
+            "utilization": {
+                "mean": 0.20575354387597444,
+                "std": 0.0
+            }
+        },
+        "Baseline": {
+            "cost": {
+                "mean": 3289.0,
+                "std": 0.0
+            },
+            "sla_violation": {
+                "mean": 0.0,
+                "std": 0.0
+            },
+            "latency": {
+                "mean": 0.08415990072318297,
+                "std": 0.0
+            },
+            "utilization": {
+                "mean": 0.5927516231707123,
+                "std": 0.0
+            }
+        }
+    }
+}

@@ -1,0 +1,1 @@
+SCENARIOS = ["spike", "linear", "noisy", "periodic"]
