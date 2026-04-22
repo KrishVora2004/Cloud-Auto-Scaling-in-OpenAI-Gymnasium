@@ -1,5 +1,3 @@
-# sim/workload.py
-
 import numpy as np
 
 
@@ -9,12 +7,13 @@ class WorkloadGenerator:
         self.steps = steps
         self.scenario = scenario
 
+        # ✅ Independent RNG (no global seed pollution)
+        self.rng = np.random.default_rng(seed)
+
         if sequence is not None:
-            # 🔥 Use provided sequence (for fair comparison)
+            # Use provided sequence (for fair comparison)
             self.sequence = sequence
         else:
-            if seed is not None:
-                np.random.seed(seed)
             self.sequence = self._generate_sequence()
 
     def _generate_sequence(self):
@@ -26,6 +25,10 @@ class WorkloadGenerator:
         """
 
         seq = []
+        phase = self.rng.uniform(0, 2 * np.pi)
+
+        freq = self.rng.uniform(0.04, 0.07)
+        amp = self.rng.uniform(50, 80)
 
         for t in range(self.steps):
 
@@ -36,16 +39,17 @@ class WorkloadGenerator:
                 val = 10 + t * 2
 
             elif self.scenario == "noisy":
-                val = np.random.randint(20, 500)
+                val = self.rng.integers(20, 500)
 
             elif self.scenario == "periodic":
-                val = 200 + 150 * np.sin(2 * np.pi * t / 50)
+                val = 200 + 150 * np.sin((2 * np.pi * t / 50) + phase)
 
             else:
                 base = 100
-                periodic = 60 * np.sin(0.05 * t)
-                noise = np.random.normal(0, 10)
-                burst = np.random.uniform(100, 200) if np.random.rand() < 0.05 else 0
+                periodic = amp * np.sin((freq * t) + phase)
+                noise = self.rng.normal(0, 10)
+                burst = self.rng.uniform(100, 200) if self.rng.random() < 0.05 else 0
+
                 val = max(0, base + periodic + noise + burst)
 
             seq.append(val)
