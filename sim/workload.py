@@ -7,26 +7,18 @@ class WorkloadGenerator:
         self.steps = steps
         self.scenario = scenario
 
-        # ✅ Independent RNG (no global seed pollution)
         self.rng = np.random.default_rng(seed)
 
         if sequence is not None:
-            # Use provided sequence (for fair comparison)
             self.sequence = sequence
         else:
             self.sequence = self._generate_sequence()
 
     def _generate_sequence(self):
-        """
-        Realistic workload model:
-        - periodic pattern
-        - noise
-        - occasional bursts
-        """
+        """Builds a lambda_t sequence according to the chosen scenario."""
 
         seq = []
         phase = self.rng.uniform(0, 2 * np.pi)
-
         freq = self.rng.uniform(0.04, 0.07)
         amp = self.rng.uniform(50, 80)
 
@@ -57,6 +49,7 @@ class WorkloadGenerator:
         return seq
 
     def get(self, t):
+        """Returns lambda at timestep t, clamped to the last value if t overflows."""
         if t < len(self.sequence):
             return self.sequence[t]
         return self.sequence[-1]
