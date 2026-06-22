@@ -1,32 +1,39 @@
-# evaluation/plot_results.py
-
 import matplotlib.pyplot as plt
 
 
-def plot_instances_vs_workload(ppo_results, dqn_results, baseline_results):
+def plot_instances_vs_workload(ppo_result, dqn_result, baseline_result):
+    """
+    Plots one episode's workload (raw lambda) against each agent's
+    instance-count decisions over time.
 
-    # Shared workload
-    workload = ppo_results["workload"]
+    """
 
-    plt.figure(figsize=(12, 6))
+    workload = [step["requests"] for step in ppo_result["history"]]
 
-    # Workload (single line)
-    plt.plot(workload, label="Workload (λ)", linestyle="--", linewidth=2)
+    ppo_instances = [step["instances"] for step in ppo_result["history"]]
+    dqn_instances = [step["instances"] for step in dqn_result["history"]]
+    baseline_instances = [step["instances"] for step in baseline_result["history"]]
 
-    # PPO
-    plt.plot(ppo_results["instances"], label="PPO", linewidth=2)
+    fig, ax1 = plt.subplots(figsize=(12, 6))
 
-    # DQN
-    plt.plot(dqn_results["instances"], label="DQN", linewidth=2)
+    ax1.plot(workload, label="Workload (\u03bb)", linestyle="--",
+              linewidth=2, color="tab:blue", alpha=0.6)
+    ax1.set_xlabel("Time Steps")
+    ax1.set_ylabel("Workload (\u03bb)", color="tab:blue")
+    ax1.tick_params(axis="y", labelcolor="tab:blue")
 
-    # Baseline
-    plt.plot(baseline_results["instances"], label="Baseline", linewidth=2)
+    ax2 = ax1.twinx()
+    ax2.plot(ppo_instances, label="PPO", linewidth=2, color="tab:orange")
+    ax2.plot(dqn_instances, label="DQN", linewidth=2, color="tab:green")
+    ax2.plot(baseline_instances, label="Baseline", linewidth=2, color="tab:red")
+    ax2.set_ylabel("Instances (N)")
+
+    handles1, labels1 = ax1.get_legend_handles_labels()
+    handles2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(handles1 + handles2, labels1 + labels2, loc="upper left")
 
     plt.title("Workload vs Scaling Decisions")
-    plt.xlabel("Time Steps")
-    plt.ylabel("Value")
+    ax1.grid()
 
-    plt.legend()
-    plt.grid()
-
+    plt.tight_layout()
     plt.show()
