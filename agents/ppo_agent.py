@@ -11,10 +11,13 @@ def train_ppo(total_timesteps=100_000, model_path=None,
 
     os.makedirs("models", exist_ok=True)
 
+    # Default naming: ppo_<steps>_<timestamp>.zip  e.g. ppo_10000_20260617_132143.zip
     if model_path is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         model_path = f"models/ppo_{total_timesteps}_{timestamp}"
 
+    # workload_factory takes priority -- if provided, CloudEnv regenerates a fresh scenario each episode. 
+    # If only workload is provided, the same fixed sequence replays every episode.
     if workload_factory is not None:
         env = Monitor(CloudEnv(workload_factory=workload_factory))
     else:
@@ -22,6 +25,8 @@ def train_ppo(total_timesteps=100_000, model_path=None,
             workload = WorkloadGenerator(steps=1000)
         env = Monitor(CloudEnv(workload=workload))
 
+    # n_steps scaled to the training budget: a fixed 2048 with only 10k total steps gives ~4 policy updates 
+    # -- too few to learn anything. This keeps ~20 updates regardless of how short the run is.
     n_steps = min(2048, max(256, total_timesteps // 20))
 
     model = PPO(

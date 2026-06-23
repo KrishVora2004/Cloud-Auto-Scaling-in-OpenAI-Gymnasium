@@ -1,3 +1,18 @@
+# Approach: full 5-feature state, normalized to [0,1] so no single feature dominates gradients during training.
+#   state = [lambda_norm, N_norm, U_cpu, Error, R_norm]
+
+# Reward and step/reset logic read from the metrics dict returned by the
+# simulator -- this keeps reward correct regardless of how state normalization is done.
+
+# Supports two workload modes:
+#   workload:         fixed WorkloadGenerator instance -- used for evaluation,
+#                     testing, and single-scenario training (same sequence
+#                     replayed every episode).
+#   workload_factory: callable -> WorkloadGenerator -- used for mixed-scenario
+#                     training (Option C). Called once per reset() so each
+#                     episode gets a freshly generated workload sequence,
+#                     allowing the agent to generalize across scenario types.
+
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
@@ -6,6 +21,8 @@ from sim.cloud_sim import CloudSimulator
 
 class CloudEnv(gym.Env):
 
+    # Normalization caps -- chosen to comfortably cover the workload generator's range (max ~ base + amp
+    # + burst ~= 100+80+200 = 380,plus headroom for "spike" scenario which goes to 500).
     LAMBDA_MAX = 1000.0
     RESPONSE_MAX = 10.0
 
@@ -23,8 +40,10 @@ class CloudEnv(gym.Env):
         self.workload = workload if workload_factory is None else workload_factory()
         self.t = 0
 
+        # 0 = scale down, 1 = maintain, 2 = scale up
         self.action_space = spaces.Discrete(3)
 
+        # All 5 features normalized to [0,1]. Features: [lambda, N, utilization, error, response time]
         low = np.zeros(5, dtype=np.float32)
         high = np.ones(5, dtype=np.float32)
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
@@ -57,6 +76,7 @@ class CloudEnv(gym.Env):
         terminated = False
         truncated = self.t >= len(self.workload.sequence)
 
+        # Raw Values before Normalization for logging/plotting/evaluation
         info = {
             "requests": metrics["lambda"],
             "served_requests": metrics["lambda"] * (1 - metrics["error_rate"]),
@@ -89,7 +109,26 @@ class CloudEnv(gym.Env):
         ], dtype=np.float32)
 
     def compute_reward(self, metrics, action):
-        
+
+        """
+        Reward = -(alpha * response + beta * error + gamma * cost + delta * idle) - scaling_penalty
+
+        Now cost is split into two terms:
+          gamma * norm_cost  -- penalizes necessary cost (running instances
+                                 to serve current load), kept moderate so
+                                 scale-up during spikes is still worthwhile
+          delta * norm_idle  -- penalizes IDLE/WASTED capacity specifically
+                                 (instances above what current load requires),
+                                 giving a strong direct incentive to scale DOWN
+                                 during low-load periods
+
+
+        alpha   response time -- secondary priority
+        beta    SLA/error -- highest priority
+        gamma   necessary cost -- moderate, allows scale-up when needed
+        delta   idle/wasted capacity -- high, directly drives scale-down
+
+        """        
 
         max_response = self.RESPONSE_MAX
         max_cost = self.sim.N_max * self.sim.cost_per_instance
@@ -117,6 +156,7 @@ class CloudEnv(gym.Env):
             + delta * norm_idle
         )
 
+        # Small penalty for any (action != 1), discourages pointless thrashing without dominating the reward.
         scaling_penalty = 0.02 * abs(action - 1)
         reward -= scaling_penalty
 

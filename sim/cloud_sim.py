@@ -1,19 +1,25 @@
-import numpy as np
+# Implements the physics of the cloud system as derived in the MDP spec:
+#   U_cpu = lambda / (N * mu)
+#   R     = 1 / (mu - lambda_i)   where lambda_i = lambda / N   (M/M/1 per-instance)
+#   Error = max(0, (lambda - C) / lambda)   where C = N * mu
+#   Cost  = N * cost_per_instance
 
+import numpy as np
 
 class CloudSimulator:
 
     def __init__(self,
-                 mu=50,
-                 cost_per_instance=1,
-                 N_min=1,
-                 N_max=20):
+                 mu=50,                 # max requests/sec served per instance
+                 cost_per_instance=1,   # cost unit per active instance
+                 N_min=1,               # lower bound on instance count
+                 N_max=20):             # upper bound on instance count
 
         self.mu = mu
         self.cost_per_instance = cost_per_instance
         self.N_min = N_min
         self.N_max = N_max
 
+        # State is fully (re)initialized in reset()
         self.N_t = None
         self.t = None
 
@@ -51,6 +57,7 @@ class CloudSimulator:
         capacity = self.N_t * self.mu
         utilization = lambda_t / capacity if capacity > 0 else 1.0
 
+        # Per-instance arrival rate and M/M/1 response time
         lambda_i = lambda_t / self.N_t
 
         if lambda_i < self.mu:

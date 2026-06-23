@@ -1,5 +1,8 @@
-import numpy as np
+# Generates lambda_t (incoming request rate) sequences for different scenarios.
+# Matches the PDF's stochastic/sinusoidal workload model:
+#   lambda_{t+1} = lambda_base + A*sin(omega*t) + noise
 
+import numpy as np
 
 class WorkloadGenerator:
 
@@ -7,9 +10,11 @@ class WorkloadGenerator:
         self.steps = steps
         self.scenario = scenario
 
+        # Independent RNG instance -> no global seed pollution, so multiple generators in the same process don't interfere.
         self.rng = np.random.default_rng(seed)
 
         if sequence is not None:
+            # Reuse an existing sequence (e.g. for fair cross-agent comparison)
             self.sequence = sequence
         else:
             self.sequence = self._generate_sequence()
