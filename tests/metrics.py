@@ -1,7 +1,17 @@
+# Turns raw per-step info history into per-episode summary metrics, then
+# aggregates those summaries across multiple seeds (mean + std).
+
+
 import numpy as np
 
-
 def compute_metrics(data):
+    """
+    data: list of per-step info dicts (each from CloudEnv.step()).
+
+    cost is summed (total resource cost over the episode), while sla_violation/latency/utilization are averaged per step 
+    -- this matches how the original metrics were defined, but note cost will scale with episode length,
+    so only compare cost across equal-length episodes (all scenarios here use the same workload length).
+    """
     cost = np.sum([d.get("cost", 0) for d in data])
 
     error_rates = [d.get("error_rate", 0) for d in data]
@@ -14,11 +24,15 @@ def compute_metrics(data):
         "cost": cost,
         "sla_violation": sla_violation,
         "latency": latency,
-        "utilization": utilization
+        "utilization": utilization,
     }
 
 
 def aggregate(results):
+    """
+    results: list of compute_metrics() outputs (one per seed).
+    Returns mean/std for each metric across all seeds.
+    """
     final = {}
 
     for key in results[0]:
@@ -26,7 +40,7 @@ def aggregate(results):
 
         final[key] = {
             "mean": float(np.mean(values)),
-            "std": float(np.std(values))
+            "std": float(np.std(values)),
         }
 
     return final

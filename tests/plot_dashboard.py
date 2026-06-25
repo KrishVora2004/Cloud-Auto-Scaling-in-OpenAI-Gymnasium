@@ -1,18 +1,25 @@
-import json
+# Multi-scenario, multi-agent dashboard: a 2x2 grid, one subplot per metric (cost/sla_violation/latency/utilization)
+# bars grouped by scenario and colored by agent, with std-dev error bars.
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 def plot_all_metrics(results):
+    """
+    results: nested dict as returned by tests.compare.run_comparison(), e.g.
+        results["spike"]["PPO"]["cost"] = {"mean": ..., "std": ...}
+    """
     scenarios = list(results.keys())
-    agents = ["DQN", "PPO", "Baseline"]
+    agents = ["PPO", "DQN", "Baseline"]
     metrics = ["cost", "sla_violation", "latency", "utilization"]
 
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     axes = axes.flatten()
 
     x = np.arange(len(scenarios))
-    width = 0.2
+    width = 0.25
 
     for i, metric in enumerate(metrics):
         ax = axes[i]
@@ -26,7 +33,6 @@ def plot_all_metrics(results):
         ax.set_title(metric.upper())
         ax.set_xticks(x + width)
         ax.set_xticklabels(scenarios)
-        #ax.set_xlabel("Scenario")
         ax.set_ylabel(metric)
         ax.grid()
 
@@ -35,14 +41,3 @@ def plot_all_metrics(results):
 
     plt.tight_layout()
     plt.show()
-
-
-def main():
-    with open("results.json", "r") as f:
-        results = json.load(f)
-
-    plot_all_metrics(results)
-
-
-if __name__ == "__main__":
-    main()
