@@ -56,10 +56,19 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--window", type=int, default=20,
                         help="Smoothing window size in episodes (default: 20)")
+    parser.add_argument("--ppo-log", type=str, default=None,
+                        help="Explicit path to PPO monitor CSV "
+                             "(default: latest in logs/). Use when plotting "
+                             "a specific model's training curve rather than "
+                             "the most recently trained one.")
+    parser.add_argument("--dqn-log", type=str, default=None,
+                        help="Explicit path to DQN monitor CSV "
+                             "(default: latest in logs/).")
     args = parser.parse_args()
 
-    ppo_log = find_latest_log("logs/ppo_*.monitor.csv")
-    dqn_log = find_latest_log("logs/dqn_*.monitor.csv")
+    # Use explicitly provided paths if given, otherwise fall back to latest
+    ppo_log = args.ppo_log if args.ppo_log else find_latest_log("logs/ppo_*.monitor.csv")
+    dqn_log = args.dqn_log if args.dqn_log else find_latest_log("logs/dqn_*.monitor.csv")
 
     if ppo_log is None and dqn_log is None:
         print("No training logs found in logs/. Train a model first with:")
@@ -86,8 +95,9 @@ def main():
 
         if len(df) >= args.window:
             smoothed = smooth(df["reward"].values, args.window)
-            # smoothed array is shorter by (window-1) -- align to the END of the timestep series so 
-            # smoothed line ends at the same timestep as the raw data.
+            # smoothed array is shorter by (window-1) -- align to the END
+            # of the timestep series so the smoothed line ends at the same
+            # timestep as the raw data.
             smoothed_steps = df["timestep"].values[args.window - 1:]
             ax.plot(smoothed_steps, smoothed,
                     color=color, linewidth=2,

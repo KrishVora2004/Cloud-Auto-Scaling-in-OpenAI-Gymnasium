@@ -16,7 +16,7 @@ def env_fn(scenario, seed, steps=500):
     return CloudEnv(workload)
 
 
-def evaluate_agent(agent_label, model, scenario, seeds=(1, 42, 100, 7, 23), steps=500):
+def evaluate_agent(agent_label, model, scenario, seeds=(1, 42, 100), steps=500):
     """
     Runs one agent (PPO/DQN model, or BaselineAgent) across multiple seeds
     for a single scenario, returning aggregated mean/std metrics.
@@ -37,9 +37,11 @@ def evaluate_agent(agent_label, model, scenario, seeds=(1, 42, 100, 7, 23), step
     return aggregate(per_seed_metrics)
 
 
-def run_comparison(scenarios=None, seeds=(1, 42, 100), steps=500):
+def run_comparison(scenarios=None, seeds=(1, 42, 100), steps=500,
+                   ppo_model=None, dqn_model=None):
     """
-    Runs PPO, DQN, and Baseline across every scenario in `scenarios` returning:
+    Runs PPO, DQN, and Baseline across every scenario in `scenarios`
+    (defaults to tests.scenarios.SCENARIOS), returning:
 
         {
             scenario_name: {
@@ -49,12 +51,18 @@ def run_comparison(scenarios=None, seeds=(1, 42, 100), steps=500):
             },
             ...
         }
+
+    Models can be passed in directly (ppo_model, dqn_model) -- useful when
+    loading a specific pinned checkpoint via load_specific_models(). If not
+    provided, load_latest_models() is used as the default.
     """
     if scenarios is None:
         scenarios = SCENARIOS
 
-    from evaluation.load_models import load_latest_models
-    ppo_model, dqn_model = load_latest_models()
+    if ppo_model is None or dqn_model is None:
+        from evaluation.load_models import load_latest_models
+        ppo_model, dqn_model = load_latest_models()
+
     baseline = BaselineAgent()
 
     results = {}

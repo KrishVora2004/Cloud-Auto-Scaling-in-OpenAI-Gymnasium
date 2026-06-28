@@ -20,46 +20,40 @@ import sys
 
 from tests.compare import run_comparison
 from tests.scenarios import SCENARIOS
-from evaluation.load_models import ModelLoadError
+from evaluation.load_models import load_models_auto, ModelLoadError
 
 
 METRICS = ["cost", "sla_violation", "latency", "utilization"]
 AGENTS  = ["PPO", "DQN", "Baseline"]
-
-# Column widths for terminal formatting
+ 
 COL_SCENARIO = 10
 COL_AGENT    = 10
-COL_METRIC   = 18   # "mean ± std" fits comfortably
-
-
+COL_METRIC   = 18
+ 
+ 
 def format_cell(mean, std):
-    """Formats a single metric cell as 'mean ± std'."""
-    return f"{mean:.2f} ± {std:.2f}"
-
-
+    return f"{mean:.2f} +/- {std:.2f}"
+ 
+ 
 def print_table(results):
-    """Prints the results as a formatted terminal table."""
-
-    # Header
     header = (
         f"{'Scenario':<{COL_SCENARIO}}"
         f"{'Agent':<{COL_AGENT}}"
         + "".join(f"{m.upper():<{COL_METRIC}}" for m in METRICS)
     )
     separator = "-" * len(header)
-
+ 
     print("\n" + separator)
     print(header)
     print(separator)
-
+ 
     for scenario in results:
         first_agent = True
         for agent in AGENTS:
             metrics = results[scenario][agent]
-
             scenario_label = scenario if first_agent else ""
             first_agent = False
-
+ 
             row = (
                 f"{scenario_label:<{COL_SCENARIO}}"
                 f"{agent:<{COL_AGENT}}"
@@ -69,96 +63,101 @@ def print_table(results):
                 )
             )
             print(row)
-
+ 
         print(separator)
-
+ 
     print()
-
-
+ 
+ 
 def save_csv(results, path="results_summary.csv"):
-    """Saves results to a CSV file with one row per (scenario, agent) pair."""
     rows = []
-
+ 
     for scenario in results:
         for agent in AGENTS:
             metrics = results[scenario][agent]
             row = {"scenario": scenario, "agent": agent}
-
+ 
             for m in METRICS:
                 row[f"{m}_mean"] = round(metrics[m]["mean"], 4)
                 row[f"{m}_std"]  = round(metrics[m]["std"],  4)
-
+ 
             rows.append(row)
-
+ 
     fieldnames = (
         ["scenario", "agent"]
         + [f"{m}_mean" for m in METRICS]
         + [f"{m}_std"  for m in METRICS]
     )
-
+ 
     with open(path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
-
+ 
     print(f"Results saved to {path}")
-
-
+ 
+ 
 def print_highlights(results):
-    """
-    Prints a brief highlights section identifying where each RL agent
-    beats or matches baseline on cost -- the primary project objective.
-    """
     print("--- Cost vs Baseline ---")
-
+ 
     for scenario in results:
         baseline_cost = results[scenario]["Baseline"]["cost"]["mean"]
-
+ 
         for agent in ["PPO", "DQN"]:
             agent_cost = results[scenario][agent]["cost"]["mean"]
             diff = agent_cost - baseline_cost
             pct  = (diff / baseline_cost) * 100
-
-            symbol = "✓" if diff <= 0 else "✗"
+ 
+            symbol    = "+" if diff <= 0 else "x"
             direction = "lower" if diff <= 0 else "higher"
-
+ 
             print(
                 f"  {symbol} {agent} vs Baseline | {scenario:>8}: "
                 f"{agent_cost:.0f} vs {baseline_cost:.0f}  "
                 f"({abs(pct):.1f}% {direction})"
             )
-
+ 
     print()
-
-
+ 
+ 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--scenarios", nargs="+", default=SCENARIOS)
-    parser.add_argument("--seeds", nargs="+", type=int, default=[1, 42, 100, 7, 23],
-                        help="Evaluation seeds (default: 5 seeds for more robust stats)")
+    parser.add_argument("--seeds", nargs="+", type=int, default=[1, 42, 100, 7, 23])
     parser.add_argument("--steps", type=int, default=500)
     parser.add_argument("--save", action="store_true",
                         help="Save results to results_summary.csv")
-
+    parser.add_argument("--ppo-model", type=str, default=None,
+                        help="Explicit PPO model path (overrides config.json and latest)")
+    parser.add_argument("--dqn-model", type=str, default=None,
+                        help="Explicit DQN model path (overrides config.json and latest)")
+ 
     args = parser.parse_args()
-
+ 
     print("\nRunning comparison...\n")
-
+ 
     try:
+        ppo_model, dqn_model, _, _ = load_models_auto(
+            ppo_path_override=args.ppo_model,
+            dqn_path_override=args.dqn_model,
+        )
+ 
         results = run_comparison(
             scenarios=args.scenarios,
             seeds=tuple(args.seeds),
             steps=args.steps,
+            ppo_model=ppo_model,
+            dqn_model=dqn_model,
         )
     except ModelLoadError:
         return
-
+ 
     print_table(results)
     print_highlights(results)
-
+ 
     if args.save:
         save_csv(results)
-
-
+ 
+ 
 if __name__ == "__main__":
     main()
