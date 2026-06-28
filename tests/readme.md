@@ -1,12 +1,13 @@
 # 🧪 Tests Module (`tests/`)
 
-The **Tests Module** is the experiment orchestration layer of the project. It decides:
+The **Tests Module** is the experiment orchestration layer of the project. It determines:
 
 * **What** to compare
 * **Which scenarios** to evaluate
 * **How many seeds** to run
-* **How results are aggregated**
+* **How metrics are aggregated**
 * **How results are visualized**
+* **How trained policies are diagnosed**
 
 Unlike `evaluation/`, which only provides reusable evaluation mechanics, this module designs and executes the actual experiments.
 
@@ -28,7 +29,7 @@ Unlike `evaluation/`, which only provides reusable evaluation mechanics, this mo
 
 The `tests/` module is responsible for:
 
-✅ Loading trained models
+✅ Plotting training progress
 
 ✅ Running multi-scenario experiments
 
@@ -36,7 +37,9 @@ The `tests/` module is responsible for:
 
 ✅ Aggregating metrics
 
-✅ Producing plots and dashboards
+✅ Producing dashboards and tables
+
+✅ Visualizing policy behavior
 
 ✅ Diagnosing reward-function issues
 
@@ -46,55 +49,55 @@ It represents the **final stage** of the RL pipeline.
 
 # 🏗️ Role in the Project Pipeline
 
-```text id="fh2v7h"
+```text
 agents/train.py
         │
-        ▼
-    models/
-        │
-        ▼
+        ├── models/
+        └── logs/
+               │
+               ▼
+tests/plot_training_curve.py
+               │
+               ▼
 tests/run_experiments.py
-        │
-        ├── Dashboard
-        │
-        └── Metrics
-        │
-        ▼
+               │
+               ▼
+tests/results_summary.py
+               │
+               ▼
 tests/run_single_episode.py
-        │
-        └── Time-Series Plot
-        │
-        ▼
+               │
+               ▼
 tests/diagnose_reward.py
-        │
-        └── Reward Analysis
 ```
 
-The module consumes trained models and produces all results used to evaluate agent performance.
+The `tests/` module consumes trained models and training logs to generate all final results and visualizations.
 
 ---
 
 # 📂 Module Structure
 
-| File                    | Responsibility                   |
-| ----------------------- | -------------------------------- |
-| `scenarios.py`          | Defines evaluation scenarios     |
-| `metrics.py`            | Computes and aggregates metrics  |
-| `compare.py`            | Runs multi-agent comparisons     |
-| `plot_dashboard.py`     | Creates dashboard visualizations |
-| `diagnose_reward.py`    | Investigates reward calibration  |
-| `run_experiments.py`    | Full experiment runner           |
-| `run_single_episode.py` | Single-episode visualization     |
+| File                     | Responsibility                   |
+| ------------------------ | -------------------------------- |
+| `scenarios.py`           | Defines workload scenarios       |
+| `metrics.py`             | Computes and aggregates metrics  |
+| `compare.py`             | Runs multi-agent comparisons     |
+| `plot_dashboard.py`      | Creates dashboard visualizations |
+| `plot_training_curve.py` | Visualizes learning progress     |
+| `results_summary.py`     | Produces formatted result tables |
+| `diagnose_reward.py`     | Investigates reward calibration  |
+| `run_experiments.py`     | Full experiment runner           |
+| `run_single_episode.py`  | Single-episode visualization     |
 
 ---
 
 # 🔄 Experiment Workflow
 
-```text id="mx3tqm"
+```text
 Load Models
       │
       ▼
-Select Scenario
+Select Scenarios
       │
       ▼
 Run Agents
@@ -106,10 +109,10 @@ Collect Metrics
 Aggregate Results
       │
       ▼
-Generate Plots
+Generate Plots & Tables
 ```
 
-Every experiment follows this same pipeline.
+Every experiment in the project follows this workflow.
 
 ---
 
@@ -119,9 +122,9 @@ Every experiment follows this same pipeline.
 
 # 🌊 `scenarios.py`
 
-Provides a single source of truth for evaluation scenarios.
+Provides the single source of truth for workload scenarios:
 
-```python id="48igdl"
+```python
 SCENARIOS = [
     "spike",
     "linear",
@@ -138,17 +141,17 @@ Without this file:
 
 ❌ Scenario names become hardcoded.
 
-❌ Typos become difficult to detect.
+❌ Adding new scenarios requires changes across multiple files.
 
-❌ Adding new scenarios requires modifying many files.
+❌ Typos become difficult to track.
 
-By defining them once, every experiment uses the same set of workload scenarios.
+Centralization guarantees consistency throughout the project.
 
 ---
 
 # 📊 `metrics.py`
 
-Responsible for metric computation and aggregation.
+Responsible for computing and aggregating evaluation metrics.
 
 Provides two functions:
 
@@ -158,13 +161,13 @@ Provides two functions:
 
 Input:
 
-```python id="zwscvd"
+```python
 list[info_dict]
 ```
 
 Output:
 
-```python id="yl8ht2"
+```python
 {
     "cost": ...,
     "error": ...,
@@ -190,7 +193,7 @@ Output:
 
 Input:
 
-```python id="vztvtt"
+```python
 [
     metric_dict_seed1,
     metric_dict_seed2,
@@ -200,14 +203,14 @@ Input:
 
 Output:
 
-```python id="sqdzrw"
+```python
 {
     "mean": ...,
     "std": ...
 }
 ```
 
-Used to generate:
+Used to compute:
 
 * Dashboard values
 * Error bars
@@ -221,7 +224,7 @@ The central comparison engine.
 
 Provides:
 
-```python id="mdjlwm"
+```python
 run_comparison()
 ```
 
@@ -241,7 +244,7 @@ run_comparison()
 
 ## Data Flow
 
-```text id="mx8vnf"
+```text
 PPO
 DQN
 Baseline
@@ -260,7 +263,7 @@ Aggregated Results
 
 ## Return Structure
 
-```python id="jlwmqe"
+```python
 results[
     scenario
 ][
@@ -272,7 +275,7 @@ results[
 
 Example:
 
-```python id="ccjlwm"
+```python
 results["spike"]["ppo"]["cost"]
 ```
 
@@ -280,12 +283,12 @@ results["spike"]["ppo"]["cost"]
 
 # 📈 `plot_dashboard.py`
 
-Responsible for creating the project's primary evaluation figure.
+Responsible for generating the project's primary evaluation figure.
 
 Produces:
 
-```text id="g5s5od"
-2 × 2 Dashboard
+```text
+2 × 2 Metrics Dashboard
 ```
 
 ---
@@ -303,7 +306,7 @@ Produces:
 
 ## Plot Structure
 
-```text id="9qk3po"
+```text
 Scenario
      │
      ├── PPO
@@ -311,9 +314,9 @@ Scenario
      └── Baseline
 ```
 
-Each bar includes:
+Each bar displays:
 
-```text id="rfjlwm"
+```text
 Mean ± Standard Deviation
 ```
 
@@ -321,17 +324,98 @@ computed across evaluation seeds.
 
 ---
 
-## Data Source
+# 📈 `plot_training_curve.py`
 
-The dashboard consumes:
+Visualizes learning progression during training.
 
-```python id="ujtrsp"
-results
+Reads:
+
+```text
+logs/
 ```
 
-directly in memory.
+and generates:
 
-No intermediate file is required.
+```text
+Episode Reward
+        vs
+Cumulative Timesteps
+```
+
+for both PPO and DQN.
+
+---
+
+## Plot Contents
+
+For each algorithm:
+
+* Raw per-episode reward
+* Smoothed rolling average
+
+---
+
+## Why Plot Learning Curves?
+
+Training curves reveal:
+
+✅ Convergence
+
+✅ Instability
+
+✅ Reward plateaus
+
+✅ Exploration behavior
+
+✅ Relative learning speed
+
+---
+
+## Smoothing Window
+
+Default smoothing can be changed:
+
+```bash
+python -m tests.plot_training_curve --window 10
+python -m tests.plot_training_curve --window 50
+```
+
+---
+
+# 📋 `results_summary.py`
+
+Produces formatted terminal tables of evaluation results.
+
+Runs the entire comparison pipeline and prints:
+
+```text
+Scenario
+    ↓
+Agent
+    ↓
+Metric ± Std
+```
+
+---
+
+## Metrics Displayed
+
+* Cost
+* SLA Violation
+* Latency
+* Utilization
+
+---
+
+## Additional Analysis
+
+After the tables, the script prints:
+
+```text
+Cost vs Baseline Highlights
+```
+
+showing where PPO or DQN outperform the threshold policy.
 
 ---
 
@@ -339,7 +423,7 @@ No intermediate file is required.
 
 A diagnostic tool used during reward tuning.
 
-Its purpose is to determine whether poor behavior originates from:
+Its purpose is to determine whether poor policy behavior originates from:
 
 * Insufficient training
 * Poor exploration
@@ -351,17 +435,17 @@ Its purpose is to determine whether poor behavior originates from:
 
 Runs:
 
-```text id="qadkkr"
+```text
 Learned Policy
 ```
 
 versus
 
-```text id="jpz3nt"
+```text
 Forced Scale-Up Policy
 ```
 
-on the exact same workload.
+on the identical workload.
 
 ---
 
@@ -377,29 +461,29 @@ on the exact same workload.
 
 ### Forced Policy Performs Better
 
-```text id="4a4w2x"
+```text
 Training Problem
 ```
 
 Possible causes:
 
 * Insufficient timesteps
-* Poor exploration
-* Hyperparameter issues
+* Exploration issues
+* Hyperparameter problems
 
 ---
 
 ### Forced Policy Performs Worse
 
-```text id="yfzjlwm"
-Reward Problem
+```text
+Reward Calibration Problem
 ```
 
 Possible causes:
 
-* Cost penalties too strong
+* Cost penalties too large
 * SLA penalties too weak
-* Idle penalties improperly weighted
+* Idle penalties improperly balanced
 
 ---
 
@@ -407,9 +491,42 @@ Possible causes:
 
 ---
 
-# Full Multi-Scenario Comparison
+# 📈 Training Curve Plot
 
-```bash id="siyhho"
+```bash
+python -m tests.plot_training_curve
+```
+
+Reads:
+
+```text
+logs/
+```
+
+and produces:
+
+```text
+Episode Reward
+        vs
+Timesteps
+```
+
+for PPO and DQN.
+
+---
+
+## Custom Smoothing Window
+
+```bash
+python -m tests.plot_training_curve --window 10
+python -m tests.plot_training_curve --window 50
+```
+
+---
+
+# 📊 Full Multi-Scenario Comparison
+
+```bash
 python -m tests.run_experiments
 ```
 
@@ -421,7 +538,7 @@ python -m tests.run_experiments
 2. Load latest DQN model
 3. Evaluate:
 
-```text id="uv9tbp"
+```text
 PPO
 DQN
 Baseline
@@ -436,7 +553,7 @@ Baseline
 
 ## Default Scenarios
 
-```text id="p6zopb"
+```text
 spike
 linear
 noisy
@@ -447,7 +564,7 @@ periodic
 
 ## Custom Scenarios
 
-```bash id="qpb88q"
+```bash
 python -m tests.run_experiments \
     --scenarios spike noisy \
     --seeds 1 2 3
@@ -457,13 +574,13 @@ python -m tests.run_experiments \
 
 ## Save Results
 
-```bash id="c7u1vv"
+```bash
 python -m tests.run_experiments --save
 ```
 
 Creates:
 
-```text id="zjlwm7"
+```text
 results.json
 ```
 
@@ -471,16 +588,15 @@ results.json
 
 ## Custom Episode Length
 
-```bash id="r76p54"
-python -m tests.run_experiments \
-    --steps 500
+```bash
+python -m tests.run_experiments --steps 500
 ```
 
 ---
 
 # 📉 Single-Episode Visualization
 
-```bash id="cc5r4h"
+```bash
 python -m tests.run_single_episode
 ```
 
@@ -492,7 +608,7 @@ python -m tests.run_single_episode
 2. Create shared workload
 3. Run:
 
-```text id="ttmkam"
+```text
 PPO
 DQN
 Baseline
@@ -505,7 +621,7 @@ Baseline
 
 ## Custom Scenario
 
-```bash id="pjxq7s"
+```bash
 python -m tests.run_single_episode \
     --scenario spike \
     --steps 500 \
@@ -516,7 +632,7 @@ python -m tests.run_single_episode \
 
 ## Available Scenarios
 
-```text id="yd2d8n"
+```text
 default
 spike
 linear
@@ -528,7 +644,7 @@ periodic
 
 ## Another Example
 
-```bash id="wh4m4u"
+```bash
 python -m tests.run_single_episode \
     --scenario periodic \
     --seed 42
@@ -536,30 +652,60 @@ python -m tests.run_single_episode \
 
 ---
 
-# 🔬 Reward Diagnostic
+# 📋 Results Summary Table
 
-```bash id="qym1tt"
-python -m tests.diagnose_reward
+```bash
+python -m tests.results_summary
+```
+
+Runs the full comparison and prints:
+
+* Mean ± Standard Deviation tables
+* Cost highlights versus baseline
+
+---
+
+## Custom Seeds
+
+```bash
+python -m tests.results_summary \
+    --seeds 1 7 23 42 100
 ```
 
 ---
 
-## What It Does
+## Custom Scenarios
 
-Loads:
+```bash
+python -m tests.results_summary \
+    --scenarios spike linear
+```
 
-* PPO
-* DQN
+---
+
+## Save Results
+
+```bash
+python -m tests.results_summary --save
+```
+
+---
+
+# 🔬 Reward Diagnostic
+
+```bash
+python -m tests.diagnose_reward
+```
 
 Runs:
 
-```text id="g0bbkr"
+```text
 Learned Policy
 vs
 Forced Scale-Up Policy
 ```
 
-Prints:
+and prints:
 
 * Mean reward
 * Mean utilization
@@ -568,20 +714,22 @@ Prints:
 
 ---
 
-## Typical Output
+## Example Output
 
-```text id="z0cjlwm"
-Policy Reward:        -0.42
-Forced Reward:        -0.28
+```text
+Policy Reward:  -0.42
+Forced Reward:  -0.28
+
 Verdict:
 Training problem.
 ```
 
 or
 
-```text id="2nxdin"
-Policy Reward:        -0.42
-Forced Reward:        -0.55
+```text
+Policy Reward:  -0.42
+Forced Reward:  -0.55
+
 Verdict:
 Reward calibration problem.
 ```
@@ -590,15 +738,15 @@ Reward calibration problem.
 
 # 🏗️ Design Philosophy
 
-The project deliberately separates:
+The project intentionally separates:
 
-```text id="zjlwmv"
+```text
 Evaluation Mechanics
 ```
 
 from:
 
-```text id="3ljrhr"
+```text
 Experiment Design
 ```
 
@@ -610,9 +758,9 @@ This separation provides:
 
 ✅ Easier debugging
 
-✅ Reproducible experiments
+✅ Reproducibility
 
-✅ Independent extension of evaluation and testing logic
+✅ Independent extension of testing logic
 
 ---
 
@@ -621,11 +769,12 @@ This separation provides:
 The `tests/` module represents the experiment orchestration layer of the project. It is responsible for:
 
 * Designing evaluation experiments
+* Plotting training progression
 * Running multi-scenario comparisons
 * Running multi-seed benchmarks
 * Aggregating metrics
-* Producing dashboards and visualizations
+* Producing dashboards and tables
+* Visualizing policy behavior
 * Diagnosing reward-function issues
-* Delivering the final performance results of PPO, DQN, and Baseline agents
 
 Together with `evaluation/`, it forms the complete benchmarking framework used to validate RL-based cloud auto-scaling policies.

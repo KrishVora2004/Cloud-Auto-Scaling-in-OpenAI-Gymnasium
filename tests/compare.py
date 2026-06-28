@@ -16,7 +16,7 @@ def env_fn(scenario, seed, steps=500):
     return CloudEnv(workload)
 
 
-def evaluate_agent(agent_label, model, scenario, seeds=(1, 42, 100), steps=500):
+def evaluate_agent(agent_label, model, scenario, seeds=(1, 42, 100, 7, 23), steps=500):
     """
     Runs one agent (PPO/DQN model, or BaselineAgent) across multiple seeds
     for a single scenario, returning aggregated mean/std metrics.

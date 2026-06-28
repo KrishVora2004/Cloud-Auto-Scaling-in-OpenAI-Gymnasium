@@ -477,6 +477,19 @@ Benefits:
 
 ---
 
+# Training Logs
+ 
+Every training run writes a Monitor log CSV to `logs/`, mirroring the model filename:
+ 
+```
+logs/ppo_200000_20260621_143022.monitor.csv
+logs/dqn_200000_20260621_143041.monitor.csv
+```
+ 
+Each CSV contains one row per completed episode recording total episode reward (`r`), episode length in steps (`l`), and wall-clock time elapsed (`t`). These logs are read by `tests/plot_training_curve.py` to produce the learning progress plot showing how each agent's policy improved over the course of training.
+ 
+---
+
 # 🖥️ CLI — `train.py`
 
 The `train.py` file is the sole executable entrypoint for training.

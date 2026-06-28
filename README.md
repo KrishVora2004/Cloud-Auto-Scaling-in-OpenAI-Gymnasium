@@ -65,6 +65,7 @@ project/
 ├── evaluation/   Baseline policy and evaluation utilities
 ├── tests/        Experiment runner and dashboard generation
 ├── models/       Saved trained model checkpoints
+├── logs/         Monitor CSV logs written during training
 └── results/      Generated evaluation outputs
 ```
 
@@ -87,6 +88,7 @@ sim/ ← envs/ ← agents/
 | `evaluation/` | Baseline comparison and model evaluation            |
 | `tests/`      | Multi-scenario experiments and dashboards           |
 | `models/`     | Saved trained policies                              |
+| `logs/`       | Saved training states and descisions                |
 
 ---
 
@@ -237,7 +239,15 @@ python -m agents.train --algo dqn --steps 200000
 
 ---
 
-### 2️⃣ Visualize a Single Episode
+### 2️⃣ Plot training curves
+
+```bash
+python -m tests.plot_training_curve
+```
+
+---
+
+### 3️⃣ Visualize a Single Episode
 
 ```bash
 python -m tests.run_single_episode
@@ -245,7 +255,7 @@ python -m tests.run_single_episode
 
 ---
 
-### 3️⃣ Run Evaluation
+### 4️⃣ Run Evaluation
 
 Generate metrics and comparison dashboard:
 
@@ -255,7 +265,14 @@ python -m tests.run_experiments
 
 ---
 
-### 4️⃣ Evaluate Specific Scenarios (Optional)
+### 5️⃣ Results summary table
+```bash
+python -m tests.results_summary --save
+```
+
+---
+
+### 6️⃣ Evaluate Specific Scenarios (Optional)
 
 ```bash
 python -m tests.run_single_episode --scenario spike --steps 500 --seed 0

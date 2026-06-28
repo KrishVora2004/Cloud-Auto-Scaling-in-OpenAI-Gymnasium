@@ -16,14 +16,18 @@ def train_ppo(total_timesteps=100_000, model_path=None,
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         model_path = f"models/ppo_{total_timesteps}_{timestamp}"
 
+    # Save Monitor logs to logs/ -- this CSV is what plot_training_curve.py reads for the learning progress plot.
+    log_path = model_path.replace("models/", "logs/")
+    os.makedirs("logs", exist_ok=True)
+
     # workload_factory takes priority -- if provided, CloudEnv regenerates a fresh scenario each episode. 
     # If only workload is provided, the same fixed sequence replays every episode.
     if workload_factory is not None:
-        env = Monitor(CloudEnv(workload_factory=workload_factory))
+        env = Monitor(CloudEnv(workload_factory=workload_factory),filename=log_path)
     else:
         if workload is None:
             workload = WorkloadGenerator(steps=1000)
-        env = Monitor(CloudEnv(workload=workload))
+        env = Monitor(CloudEnv(workload=workload),filename=log_path)
 
     # n_steps scaled to the training budget: a fixed 2048 with only 10k total steps gives ~4 policy updates 
     # -- too few to learn anything. This keeps ~20 updates regardless of how short the run is.
