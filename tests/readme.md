@@ -21,6 +21,7 @@ Unlike `evaluation/`, which only provides reusable evaluation mechanics, this mo
 * [Experiment Workflow](#-experiment-workflow)
 * [File Descriptions](#-file-descriptions)
 * [CLI Commands](#-cli-commands)
+* [Design Philosophy](#-design-philosophy)
 * [Summary](#-summary)
 
 ---
@@ -43,7 +44,7 @@ The `tests/` module is responsible for:
 
 ✅ Diagnosing reward-function issues
 
-It represents the **final stage** of the RL pipeline.
+This module represents the **final stage** of the RL pipeline, transforming trained models into reproducible experimental results and visual analyses.
 
 ---
 
@@ -71,7 +72,13 @@ tests/run_single_episode.py
 tests/diagnose_reward.py
 ```
 
-The `tests/` module consumes trained models and training logs to generate all final results and visualizations.
+The `tests/` module consumes:
+
+* Trained models (`models/`)
+* Training logs (`logs/`)
+* Evaluation utilities (`evaluation/`)
+
+and produces all final metrics, plots, and comparisons.
 
 ---
 
@@ -79,7 +86,7 @@ The `tests/` module consumes trained models and training logs to generate all fi
 
 | File                     | Responsibility                   |
 | ------------------------ | -------------------------------- |
-| `scenarios.py`           | Defines workload scenarios       |
+| `scenarios.py`           | Defines evaluation scenarios     |
 | `metrics.py`             | Computes and aggregates metrics  |
 | `compare.py`             | Runs multi-agent comparisons     |
 | `plot_dashboard.py`      | Creates dashboard visualizations |
@@ -122,7 +129,7 @@ Every experiment in the project follows this workflow.
 
 # 🌊 `scenarios.py`
 
-Provides the single source of truth for workload scenarios:
+Provides the single source of truth for workload scenarios.
 
 ```python
 SCENARIOS = [
@@ -143,9 +150,9 @@ Without this file:
 
 ❌ Adding new scenarios requires changes across multiple files.
 
-❌ Typos become difficult to track.
+❌ Typos become difficult to detect.
 
-Centralization guarantees consistency throughout the project.
+Centralizing scenarios ensures consistency throughout the project.
 
 ---
 
@@ -214,7 +221,7 @@ Used to compute:
 
 * Dashboard values
 * Error bars
-* Final comparison tables
+* Summary tables
 
 ---
 
@@ -328,7 +335,7 @@ computed across evaluation seeds.
 
 Visualizes learning progression during training.
 
-Reads:
+Reads monitor logs from:
 
 ```text
 logs/
@@ -350,7 +357,7 @@ for both PPO and DQN.
 
 For each algorithm:
 
-* Raw per-episode reward
+* Raw episode rewards
 * Smoothed rolling average
 
 ---
@@ -373,8 +380,6 @@ Training curves reveal:
 
 ## Smoothing Window
 
-Default smoothing can be changed:
-
 ```bash
 python -m tests.plot_training_curve --window 10
 python -m tests.plot_training_curve --window 50
@@ -386,7 +391,7 @@ python -m tests.plot_training_curve --window 50
 
 Produces formatted terminal tables of evaluation results.
 
-Runs the entire comparison pipeline and prints:
+Runs the complete comparison pipeline and prints:
 
 ```text
 Scenario
@@ -503,15 +508,7 @@ Reads:
 logs/
 ```
 
-and produces:
-
-```text
-Episode Reward
-        vs
-Timesteps
-```
-
-for PPO and DQN.
+and displays a two-panel learning progress plot for PPO and DQN.
 
 ---
 
@@ -545,7 +542,7 @@ Baseline
 ```
 
 4. Run all scenarios
-5. Run three seeds each
+5. Run multiple seeds
 6. Aggregate metrics
 7. Display dashboard
 
@@ -628,22 +625,6 @@ python -m tests.run_single_episode \
     --seed 0
 ```
 
----
-
-## Available Scenarios
-
-```text
-default
-spike
-linear
-noisy
-periodic
-```
-
----
-
-## Another Example
-
 ```bash
 python -m tests.run_single_episode \
     --scenario periodic \
@@ -665,28 +646,20 @@ Runs the full comparison and prints:
 
 ---
 
-## Custom Seeds
+## Custom Options
+
+```bash
+python -m tests.results_summary --save
+```
 
 ```bash
 python -m tests.results_summary \
     --seeds 1 7 23 42 100
 ```
 
----
-
-## Custom Scenarios
-
 ```bash
 python -m tests.results_summary \
     --scenarios spike linear
-```
-
----
-
-## Save Results
-
-```bash
-python -m tests.results_summary --save
 ```
 
 ---
@@ -718,7 +691,7 @@ and prints:
 
 ```text
 Policy Reward:  -0.42
-Forced Reward:  -0.28
+Forced Reward: -0.28
 
 Verdict:
 Training problem.
@@ -728,7 +701,7 @@ or
 
 ```text
 Policy Reward:  -0.42
-Forced Reward:  -0.55
+Forced Reward: -0.55
 
 Verdict:
 Reward calibration problem.

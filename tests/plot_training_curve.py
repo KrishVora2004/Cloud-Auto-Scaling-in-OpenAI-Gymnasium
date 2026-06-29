@@ -57,18 +57,36 @@ def main():
     parser.add_argument("--window", type=int, default=20,
                         help="Smoothing window size in episodes (default: 20)")
     parser.add_argument("--ppo-log", type=str, default=None,
-                        help="Explicit path to PPO monitor CSV "
-                             "(default: latest in logs/). Use when plotting "
-                             "a specific model's training curve rather than "
-                             "the most recently trained one.")
+                        help="Explicit PPO monitor CSV path -- overrides "
+                             "config.json and latest")
     parser.add_argument("--dqn-log", type=str, default=None,
-                        help="Explicit path to DQN monitor CSV "
-                             "(default: latest in logs/).")
+                        help="Explicit DQN monitor CSV path -- overrides "
+                             "config.json and latest")
     args = parser.parse_args()
 
-    # Use explicitly provided paths if given, otherwise fall back to latest
-    ppo_log = args.ppo_log if args.ppo_log else find_latest_log("logs/ppo_*.monitor.csv")
-    dqn_log = args.dqn_log if args.dqn_log else find_latest_log("logs/dqn_*.monitor.csv")
+    # Priority: explicit --ppo-log/--dqn-log > config.json derived log > latest log
+    if args.ppo_log and args.dqn_log:
+        ppo_log = args.ppo_log
+        dqn_log = args.dqn_log
+    else:
+        # Load models via the same priority chain as all other scripts --
+        # this ensures the training curve shown always corresponds to the
+        # same model that run_experiments/run_single_episode would use.
+        from evaluation.load_models import load_models_auto, ModelLoadError
+        try:
+            _, _, ppo_log, dqn_log = load_models_auto(
+                ppo_path_override=None,
+                dqn_path_override=None,
+            )
+        except ModelLoadError:
+            return
+
+        # Fall back to latest log file if load_models_auto returned None logs
+        # (e.g. model was trained before Monitor CSV logging was added)
+        if ppo_log is None:
+            ppo_log = find_latest_log("logs/ppo_*.monitor.csv")
+        if dqn_log is None:
+            dqn_log = find_latest_log("logs/dqn_*.monitor.csv")
 
     if ppo_log is None and dqn_log is None:
         print("No training logs found in logs/. Train a model first with:")
