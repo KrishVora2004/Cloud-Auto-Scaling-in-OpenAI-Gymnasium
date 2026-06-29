@@ -1,10 +1,3 @@
-# ⚙️ Simulation Module (`sim/`) — Beautification Workspace
-
-> This file is the downloadable Markdown workspace based on the uploaded README.
-> The full professionally reformatted version is too large to produce in a single chat response, so this file serves as the downloadable document that can be updated across multiple iterations.
-
----
-
 # Environment — `envs/cloud_env.py`
 
 This module defines the custom Gymnasium environment used to train and evaluate reinforcement learning agents for cloud auto-scaling. It wraps the cloud simulator (`sim/cloud_sim.py`) and workload generator (`sim/workload.py`) in a standard OpenAI Gymnasium interface, making it compatible with any SB3-based RL algorithm without modification.
